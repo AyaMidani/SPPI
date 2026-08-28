@@ -460,19 +460,15 @@ function drawWheel(){
         fill="${lvl===1?'#12356b':(lvl===0?'#b6bcc6':'#ffffff')}">${q.n}</text>`;
   });
 
-  /* centre — fill follows the band (dark/medium/light blue); text colour flips for legibility */
-  const CENTER_TXT={'#12356b':'#ffffff','#3b74d4':'#ffffff','#a8c8ef':'#12356b'};
-  const centerBg=done?b.col:'#ffffff';
-  const centerTxt=done?CENTER_TXT[b.col]:'#dcdfe5';
-  const centerLabel=done?CENTER_TXT[b.col]:'#5a6b85';
-  h+=`<circle cx="${CX}" cy="${CY}" r="${R_IN-8}" fill="${centerBg}"/>`;
+  /* centre */
+  h+=`<circle cx="${CX}" cy="${CY}" r="${R_IN-8}" fill="#ffffff"/>`;
   h+=`<text x="${CX}" y="${CY-34}" text-anchor="middle" font-family="Inter,sans-serif"
-      font-size="21" font-weight="700" letter-spacing="2.6" fill="${centerLabel}">SPPI SCORE</text>`;
+      font-size="21" font-weight="700" letter-spacing="2.6" fill="#5a6b85">SPPI SCORE</text>`;
   const txt=done?fmtScore(pct):'– –';
   const fs=done?Math.min(72,(2*(R_IN-8)-40)/(txt.length*0.60)):44;
   h+=`<text x="${CX}" y="${(CY+fs*0.52).toFixed(1)}" text-anchor="middle" font-family="Inter,sans-serif"
       font-size="${fs.toFixed(1)}" font-weight="800" letter-spacing="-1"
-      fill="${centerTxt}">${txt}</text>`;
+      fill="${done?b.col:'#dcdfe5'}">${txt}</text>`;
 
   svg.innerHTML=h;
 
