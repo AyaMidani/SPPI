@@ -15,7 +15,7 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;overflow-x:hidden}
 
-.hero{background:var(--white);text-align:center;padding:2.4rem 1.5rem 1.8rem;border-bottom:1px solid var(--border)}
+.hero{background:var(--white);text-align:center;padding:2.4rem 1.5rem 1.8rem}
 .hero h2{font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.8rem,4vw,2.6rem);color:var(--navy)}
 .hero p{margin-top:.35rem;font-size:.95rem;font-weight:700;letter-spacing:.02em;color:var(--navy)}
 
@@ -104,26 +104,64 @@ const QS=[
  {
   "n": "1",
   "sec": "Operational simplicity",
-  "name": "Scale of sample preparation",
+  "name": "Location of sample preparation",
   "opts": [
    {
     "lvl": 3,
-    "text": "Miniaturized or microscale >100 µL–1 mL reagents volume"
+    "text": "Directly at the sampling site (on-site)"
    },
    {
     "lvl": 2,
-    "text": "Small conventional scale >1–10 mL reagents volume"
+    "text": "In a mobile laboratory or near the sampling site"
    },
    {
     "lvl": 1,
-    "text": "Large conventional scale >10 mL reagents volume"
+    "text": "In a remote laboratory after sample transport"
    }
   ]
  },
  {
   "n": "2",
   "sec": "Operational simplicity",
-  "name": "Automation",
+  "name": "Scale of sample preparation (total reagent/solvent volume)",
+  "opts": [
+   {
+    "lvl": 3,
+    "text": "Microscale (>100 µL–1 mL)"
+   },
+   {
+    "lvl": 2,
+    "text": "Small scale (>1mL–10 mL)"
+   },
+   {
+    "lvl": 1,
+    "text": "Macroscale (>10 mL)"
+   }
+  ]
+ },
+ {
+  "n": "3",
+  "sec": "Operational simplicity",
+  "name": "Sample preparation steps",
+  "opts": [
+   {
+    "lvl": 3,
+    "text": "1–2 steps (e.g. Dilute-and-shoot)"
+   },
+   {
+    "lvl": 2,
+    "text": "3–5 steps"
+   },
+   {
+    "lvl": 1,
+    "text": "˃5 steps"
+   }
+  ]
+ },
+ {
+  "n": "4",
+  "sec": "Operational simplicity",
+  "name": "Human intervention",
   "opts": [
    {
     "lvl": 3,
@@ -140,47 +178,9 @@ const QS=[
   ]
  },
  {
-  "n": "3",
-  "sec": "Operational simplicity",
-  "name": "Portability/on-site preparation",
-  "opts": [
-   {
-    "lvl": 3,
-    "text": "Directly at the sampling site"
-   },
-   {
-    "lvl": 2,
-    "text": "In a mobile laboratory or near the sampling site"
-   },
-   {
-    "lvl": 1,
-    "text": "In a remote laboratory after sample transport"
-   }
-  ]
- },
- {
-  "n": "4",
-  "sec": "Operational simplicity",
-  "name": "Sample preparation steps",
-  "opts": [
-   {
-    "lvl": 3,
-    "text": "Very few (1–2 steps)(e.g. Dilute-and-shoot)"
-   },
-   {
-    "lvl": 2,
-    "text": "(3–5 steps)"
-   },
-   {
-    "lvl": 1,
-    "text": "˃5 steps"
-   }
-  ]
- },
- {
   "n": "5",
   "sec": "Time-efficiency",
-  "name": "Sample throughput (samples/hr)",
+  "name": "Sample throughput (samples prepared per hour)",
   "opts": [
    {
     "lvl": 3,
@@ -199,7 +199,7 @@ const QS=[
  {
   "n": "6",
   "sec": "Time-efficiency",
-  "name": "Samples prepared simultaneously",
+  "name": "Parallel processing capacity (samples prepared simultaneously)",
   "opts": [
    {
     "lvl": 3,
@@ -218,26 +218,26 @@ const QS=[
  {
   "n": "7",
   "sec": "Time-efficiency",
-  "name": "Number of analytes",
+  "name": "Multiplexing capability (number of analytes simultaneously processed)",
   "opts": [
    {
     "lvl": 3,
-    "text": "Same class: ≥10Different classes: ≥6"
+    "text": "Same class: ≥10 orDifferent classes: ≥6"
    },
    {
     "lvl": 2,
-    "text": "Same class: 4-9Different classes: 3–5"
+    "text": "Same class: 4-9 orDifferent classes: 3–5"
    },
    {
     "lvl": 1,
-    "text": "Same class: 1-3Different classes: 1-2"
+    "text": "Same class: 1-3 orDifferent classes: 1-2"
    }
   ]
  },
  {
   "n": "8",
   "sec": "Practical requirements",
-  "name": "Sample size",
+  "name": "Sample volume",
   "opts": [
    {
     "lvl": 3,
@@ -256,7 +256,7 @@ const QS=[
  {
   "n": "9",
   "sec": "Practical requirements",
-  "name": "Availability of solvents and reagents",
+  "name": "Solvents and reagents availability",
   "opts": [
    {
     "lvl": 3,
@@ -275,7 +275,7 @@ const QS=[
  {
   "n": "10",
   "sec": "Practical requirements",
-  "name": "Availability of Sample preparation techniques",
+  "name": "Equipment/instrument requirements",
   "opts": [
    {
     "lvl": 3,
@@ -298,23 +298,22 @@ const QS=[
   "opts": [
    {
     "lvl": 3,
-    "text": "Can be performed by routinely trained analysts"
+    "text": "Basic: Can be performed by routine laboratory personnel with minimal training (e.g. dilution, vortexing, centrifugation, or filtration)"
    },
    {
     "lvl": 2,
-    "text": "Requires specific training or experience"
+    "text": "Moderate: Requires trained personnel with specific technical skills and careful control of conditions (e.g. SPE, LLE, QuEChERS)"
    },
    {
     "lvl": 1,
-    "text": "Requires highly specialised expertise"
+    "text": "Advanced: Requires highly skilled or specially trained personnel (e.g. specialized digestion procedures)"
    }
-  ],
-  "placeholder": true
+  ]
  },
  {
   "n": "12",
   "sec": "Cost-efficiency",
-  "name": "Total cost per sample",
+  "name": "Estimated cost per sample",
   "opts": [
    {
     "lvl": 3,
@@ -463,11 +462,11 @@ function drawWheel(){
 
   /* centre */
   h+=`<circle cx="${CX}" cy="${CY}" r="${R_IN-8}" fill="#ffffff" stroke="#12356b" stroke-width="3"/>`;
-  h+=`<text x="${CX}" y="${CY-26}" text-anchor="middle" font-family="Inter,sans-serif"
+  h+=`<text x="${CX}" y="${CY-34}" text-anchor="middle" font-family="Inter,sans-serif"
       font-size="21" font-weight="700" letter-spacing="2.6" fill="#5a6b85">SPPI SCORE</text>`;
   const txt=done?fmtScore(pct):'– –';
   const fs=done?Math.min(72,(2*(R_IN-8)-40)/(txt.length*0.60)):44;
-  h+=`<text x="${CX}" y="${(CY+fs*0.46).toFixed(1)}" text-anchor="middle" font-family="Inter,sans-serif"
+  h+=`<text x="${CX}" y="${(CY+fs*0.52).toFixed(1)}" text-anchor="middle" font-family="Inter,sans-serif"
       font-size="${fs.toFixed(1)}" font-weight="800" letter-spacing="-1"
       fill="${done?b.col:'#dcdfe5'}">${txt}</text>`;
 
