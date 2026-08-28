@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SPPI — Sample Preparation Applicability Index</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --ink:#0f172a; --navy:#1e3a5f; --muted:#64748b; --border:#e2e8f0;
+  --bg:#f1f5f9; --white:#fff; --radius:14px;
+  --accent:#2f5fd0;
+  --shadow:0 2px 14px rgba(0,0,0,.07);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;overflow-x:hidden}
+
+.hero{background:var(--white);text-align:center;padding:2.4rem 1.5rem 1.8rem;border-bottom:1px solid var(--border)}
+.hero h2{font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.8rem,4vw,2.6rem);color:var(--navy)}
+.hero p{margin-top:.35rem;font-size:.9rem;letter-spacing:.02em;color:var(--muted)}
+
+.main-col,.sidebar{min-width:0}
+.app{display:grid;grid-template-columns:1fr 660px;gap:1.5rem;max-width:1600px;margin:0 auto;padding:1.5rem;align-items:start}
+@media(max-width:1100px){
+  .app{grid-template-columns:1fr}
+  .sidebar{order:-1}
+}
+
+.qtable{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:1.25rem}
+.qtable>*:first-child{border-top-left-radius:var(--radius);border-top-right-radius:var(--radius)}
+.qtable>*:last-child{border-bottom-left-radius:var(--radius);border-bottom-right-radius:var(--radius);border-bottom:none}
+.qghead{padding:.7rem 1.1rem;font-size:.92rem;font-weight:800;letter-spacing:.02em;
+  background:var(--navy);color:white;display:flex;justify-content:space-between;gap:1rem}
+.qghead .cmax{font-weight:600;opacity:.8}
+
+.qrow{display:flex;align-items:stretch;border-bottom:1px solid var(--border)}
+.qlabel{flex:1 1 0%;min-width:0;padding:.7rem .95rem;display:flex;flex-direction:column;justify-content:center;
+  font-size:.81rem;line-height:1.4}
+.qlabel b{font-weight:700;color:var(--navy)}
+.qanswer{flex:0 0 300px;max-width:300px;min-width:0;padding:.5rem .8rem;display:flex;align-items:center;
+  border-left:1px solid var(--border);background:#fafbfc}
+
+.qfoot{padding:.85rem 1.1rem;font-size:.9rem;font-weight:700;color:white;background:var(--navy)}
+
+/* A native <select> can't line-clamp long option text, so answers get
+   their own small popover list instead. */
+.cdrop{position:relative;width:100%;min-width:0}
+.cdrop-btn{width:100%;min-width:0;height:36px;padding:0 .55rem;border:1.5px solid var(--border);border-radius:4px;
+  font-family:'Inter',sans-serif;font-size:.77rem;color:var(--ink);background:var(--white);cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;gap:.4rem}
+.cdrop-btn-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1;text-align:left}
+.cdrop-caret{color:var(--muted);flex-shrink:0}
+.cdrop-btn:focus{outline:none;border-color:#94a3b8}
+.cdrop-btn.answered{border-color:var(--accent)}
+.cdrop-menu{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--white);
+  border:1px solid var(--border);border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.14);z-index:20;
+  max-height:min(360px,65vh);overflow-y:auto}
+.cdrop-menu.open{display:block}
+.cdrop-menu.drop-up{top:auto;bottom:calc(100% + 4px)}
+.cdrop-opt{padding:.5rem .65rem;font-size:.72rem;line-height:1.4;color:var(--ink);cursor:pointer;
+  border-bottom:1px solid var(--border)}
+.cdrop-opt:last-child{border-bottom:none}
+.cdrop-opt:hover{background:#eef3fd}
+
+@media(max-width:640px){
+  .qrow{flex-direction:column}
+  .qlabel,.qanswer{flex:1 1 auto;max-width:none}
+  .qanswer{border-left:none;border-top:1px solid var(--border);min-width:0}
+}
+
+.sidebar{display:flex;flex-direction:column;gap:1rem}
+.dcard{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:1rem;text-align:center}
+.live-wheel{width:100%;height:auto;max-width:632px;display:block;margin:0 auto;cursor:pointer}
+.seal-hint{font-size:.72rem;color:var(--muted);margin-top:.6rem}
+.seal-hint.flash{color:#16a34a;font-weight:700}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h2>SPPI</h2>
+  <p>Sample Preparation Applicability Index</p>
+</div>
+
+<div class="app">
+<div class="main-col"><div id="tables"></div></div>
+<div class="sidebar">
+  <div class="dcard">
+    <svg id="live-svg" class="live-wheel" width="680" height="680" viewBox="0 0 680 680" xmlns="http://www.w3.org/2000/svg" onclick="saveSeal()"></svg>
+    <div class="seal-hint" id="seal-hint">Click the diagram to save or copy it</div>
+  </div>
+</div>
+</div>
+
+<canvas id="dl-canvas" style="display:none"></canvas>
+
+<script>
+/* ═══════════════════════════════ DATA ════════════════════════════════
+   Source: SPPI criteria document.
+   12 criteria in four sections, each scored 3 / 2 / 1.
+   Raw range 12–36; final score = obtained / 36 × 100.
+════════════════════════════════════════════════════════════════════════ */
+const QS=[
+ {
+  "n": "1",
+  "sec": "Operational simplicity",
+  "name": "Scale of sample preparation",
+  "opts": [
+   {
+    "lvl": 3,
+    "text": "Miniaturized or microscale >100 µL–1 mL reagents volume"
+   },
+   {
+    "lvl": 2,
+    "text": "Small conventional scale >1–10 mL reagents volume"
+   },
+   {
+    "lvl": 1,
+    "text": "Large conventional scale >10 mL reagents volume"
+   }
+  ]
+ },
+ {
+  "n": "2",
+  "sec": "Operational simplicity",
+  "name": "Automation",
+  "opts": [
+   {
+    "lvl": 3,
+    "text": "Fully automated with minimal manual intervention (robotic liquid handling, automated SPE, or 96-well extraction)"
+   },
+   {
+    "lvl": 2,
+    "text": "Partially automated (Some steps can be automated, but substantial manual handling remains necessary (e.g. SPE with manual sample loading)"
+   },
+   {
+    "lvl": 1,
+    "text": "Manual treatment (e.g. repeated manual LLE, multiple manual transfers)"
+   }
+  ]
+ },
+ {
+  "n": "3",
+  "sec": "Operational simplicity",
+  "name": "Portability/on-site preparation",
+  "opts": [
+   {
+    "lvl": 3,
+    "text": "Directly at the sampling site"
+   },
+   {
+    "lvl": 2,
+    "text": "In a mobile laboratory or near the sampling site"
+   },
+   {
+    "lvl": 1,
+    "text": "In a remote laboratory after sample transport"
+   }
+  ]
+ },
+ {
+  "n": "4",
+  "sec": "Operational simplicity",
+  "name": "Sample preparation steps",
+  "opts": [
+   {
+    "lvl": 3,
+    "text": "Very few (1–2 steps)(e.g. Dilute-and-shoot)"
+   },
+   {
+    "lvl": 2,
+    "text": "(3–5 steps)"
+   },
+   {
+    "lvl": 1,
+    "text": "˃5 steps"
+   }
+  ]
+ },
+ {
+  "n": "5",
+  "sec": "Time-efficiency",
+  "name": "Sample throughput (samples/hr)",
+  "opts": [
+   {
+    "lvl": 3,
+    "text": ">10"
+   },
+   {
+    "lvl": 2,
+    "text": "4-10"
+   },
+   {
+    "lvl": 1,
+    "text": "1-3"
+   }
+  ]
+ },
+ {
+  "n": "6",
+  "sec": "Time-efficiency",
+  "name": "Samples prepared simultaneously",
+  "opts": [
+   {
+    "lvl": 3,
+    "text": ">12"
+   },
+   {
+    "lvl": 2,
+    "text": "3-12"
+   },
+   {
+    "lvl": 1,
+    "text": "1-2"
+   }
+  ]
+ },
+ {
+  "n": "7",
+  "sec": "Time-efficiency",
+  "name": "Number of analytes",
+  "opts": [
+   {
+    "lvl": 3,
+    "text": "Same class: ≥10Different classes: ≥6"
+   },
+   {
+    "lvl": 2,
+    "text": "Same class: 4-9Different classes: 3–5"
+   },
+   {
+    "lvl": 1,
+    "text": "Same class: 1-3Different classes: 1-2"
+   }
+  ]
+ },
+ {
+  "n": "8",
+  "sec": "Practical requirements",
+  "name": "Sample size",
+  "opts": [
+   {
+    "lvl": 3,
+    "text": "≤100 μL (or mg) for bioanalytical samples; ≤10 mL (or g) for food, environmental, and other samples"
+   },
+   {
+    "lvl": 2,
+    "text": ">100 to ≤1000 μL (or mg) for bioanalytical samples; >10 to ≤100 mL (or g) for food, environmental, and other samples"
+   },
+   {
+    "lvl": 1,
+    "text": ">1000 μL (or mg) for bioanalytical samples; >100 mL (or g) for food, environmental, and other samples"
+   }
+  ]
+ },
+ {
+  "n": "9",
+  "sec": "Practical requirements",
+  "name": "Availability of solvents and reagents",
+  "opts": [
+   {
+    "lvl": 3,
+    "text": "Common commercially available reagents (methanol, acetonitrile, HNO₃, nitrogen or other common gases etc.)"
+   },
+   {
+    "lvl": 2,
+    "text": "Need to be synthesized in the lab with common instrumentation and in a simple way; some reagents are not available in all labs e.g. derivatization reagents, SPE cartridges, SPME fibers"
+   },
+   {
+    "lvl": 1,
+    "text": "Need to be synthesized in the lab with advanced equipment or know-how (e.g., specially designed metal-organic frameworks, modified nanomaterials)."
+   }
+  ]
+ },
+ {
+  "n": "10",
+  "sec": "Practical requirements",
+  "name": "Availability of Sample preparation techniques",
+  "opts": [
+   {
+    "lvl": 3,
+    "text": "Basic equipment commonly available in all analytical laboratories (e.g. vortex mixer, centrifuge, balance, heating block, or filtration device)"
+   },
+   {
+    "lvl": 2,
+    "text": "Specialized but readily accessible in most analytical laboratories (e.g. SPE manifold, ultrasonic bath, nitrogen evaporator)"
+   },
+   {
+    "lvl": 1,
+    "text": "Highly specialized or infrastructure-intensive equipment that is not commonly available in most laboratories (e.g. custom-built extraction platform)"
+   }
+  ]
+ },
+ {
+  "n": "11",
+  "sec": "Practical requirements",
+  "name": "Personnel qualifications",
+  "opts": [
+   {
+    "lvl": 3,
+    "text": "Can be performed by routinely trained analysts"
+   },
+   {
+    "lvl": 2,
+    "text": "Requires specific training or experience"
+   },
+   {
+    "lvl": 1,
+    "text": "Requires highly specialised expertise"
+   }
+  ],
+  "placeholder": true
+ },
+ {
+  "n": "12",
+  "sec": "Cost-efficiency",
+  "name": "Total cost per sample",
+  "opts": [
+   {
+    "lvl": 3,
+    "text": "Low cost, < $10"
+   },
+   {
+    "lvl": 2,
+    "text": "Moderate cost, $10–$100"
+   },
+   {
+    "lvl": 1,
+    "text": "High cost, > $100"
+   }
+  ]
+ }
+];
+const MAXPTS=QS.length*3; // 36
+
+/* Bands as stated in the source document. */
+const BANDS=[
+  {min:75.0001,lbl:'HIGH PRACTICALITY',col:'#12356b'},
+  {min:50,     lbl:'ACCEPTABLE PRACTICALITY',col:'#3b74d4'},
+  {min:0,      lbl:'LOW PRACTICALITY',col:'#a8c8ef'}
+];
+const band=p=>BANDS.find(b=>p>=b.min);
+
+/* Segment shading follows the level scored, on the document's blue scale. */
+const SHADE={3:'#12356b', 2:'#3b74d4', 1:'#a8c8ef', 0:'#eceef2'};
+
+/* ═══════════════════════════════ STATE ═══════════════════════════════ */
+const ANS={};
+const answered=()=>Object.keys(ANS).length;
+function rawPts(){let s=0;Object.values(ANS).forEach(v=>s+=v.lvl);return s;}
+const indexScore=()=>rawPts()/MAXPTS*100;
+function fmtScore(v){const r=Math.round(v*10)/10;return Number.isInteger(r)?String(r):r.toFixed(1);}
+
+/* ═══════════════════════════════ QUESTIONS ═══════════════════════════ */
+function snippet(t,w){const a=t.split(' ');return a.length<=w?t:a.slice(0,w).join(' ')+'…';}
+
+function renderAll(){
+  let html='', sec=null, open=false;
+  QS.forEach((q,i)=>{
+    if(q.sec!==sec){
+      if(open)html+='</div>';
+      sec=q.sec; open=true;
+      html+='<div class="qtable">';
+      html+=`<div class="qghead"><span>${sec}</span><span class="cmax" id="sec-${i}"></span></div>`;
+    }
+    html+=`
+      <div class="qrow">
+        <div class="qlabel"><b>${q.n} - ${q.name}</b></div>
+        <div class="qanswer">
+          <div class="cdrop">
+            <button type="button" class="cdrop-btn" id="cdrop-btn-${i}" onclick="toggleDrop(${i})">
+              <span class="cdrop-btn-label" id="cdrop-label-${i}">Select...</span>
+              <span class="cdrop-caret">&#9662;</span>
+            </button>
+            <div class="cdrop-menu" id="cdrop-menu-${i}">
+              ${q.opts.map((o,oi)=>`<div class="cdrop-opt" onclick="pick(${i},${oi})">${o.text}</div>`).join('')}
+            </div>
+          </div>
+        </div>
+      </div>`;
+  });
+  if(open)html+='</div>';
+  html+='<div class="qtable"><div class="qfoot">This application is for research purposes.</div></div>';
+  document.getElementById('tables').innerHTML=html;
+}
+renderAll();
+
+let openMenu=null;
+function toggleDrop(i){
+  const menu=document.getElementById('cdrop-menu-'+i);
+  const btn=document.getElementById('cdrop-btn-'+i);
+  if(openMenu&&openMenu!==menu)openMenu.classList.remove('open','drop-up');
+  const willOpen=!menu.classList.contains('open');
+  menu.classList.toggle('open');
+  if(willOpen){
+    const r=btn.getBoundingClientRect();
+    menu.classList.toggle('drop-up',window.innerHeight-r.bottom<Math.min(300,menu.scrollHeight)+20);
+  }
+  openMenu=menu.classList.contains('open')?menu:null;
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.cdrop')&&openMenu){openMenu.classList.remove('open','drop-up');openMenu=null;}
+});
+
+function pick(i,oi){
+  const o=QS[i].opts[oi];
+  ANS[i]={oi,lvl:o.lvl};
+  const lab=document.getElementById('cdrop-label-'+i);
+  lab.textContent=snippet(o.text,7);
+  lab.title=o.text;
+  document.getElementById('cdrop-btn-'+i).classList.add('answered');
+  document.getElementById('cdrop-menu-'+i).classList.remove('open','drop-up');
+  openMenu=null;
+  drawAll();
+}
+
+/* ═══════════════════════════════ WHEEL ═══════════════════════════════
+   Twelve tapered segments around a white centre, one per criterion,
+   each shaded by the level scored and carrying its number.
+════════════════════════════════════════════════════════════════════════ */
+const CX=340, CY=340;
+const R_IN=168, R_OUT=304, HALF=13.6;
+
+function polar(r,deg){const a=(deg-90)*Math.PI/180;return{x:CX+r*Math.cos(a),y:CY+r*Math.sin(a)};}
+function roundedPoly(pts,rad){
+  let d='';const n=pts.length;
+  for(let i=0;i<n;i++){
+    const pv=pts[(i-1+n)%n],cu=pts[i],nx=pts[(i+1)%n];
+    const v1={x:cu.x-pv.x,y:cu.y-pv.y},v2={x:nx.x-cu.x,y:nx.y-cu.y};
+    const l1=Math.hypot(v1.x,v1.y)||1,l2=Math.hypot(v2.x,v2.y)||1;
+    const rr=Math.min(rad,l1/2,l2/2);
+    const p1={x:cu.x-v1.x/l1*rr,y:cu.y-v1.y/l1*rr};
+    const p2={x:cu.x+v2.x/l2*rr,y:cu.y+v2.y/l2*rr};
+    d+=(i===0?`M${p1.x.toFixed(2)},${p1.y.toFixed(2)}`:`L${p1.x.toFixed(2)},${p1.y.toFixed(2)}`);
+    d+=`Q${cu.x.toFixed(2)},${cu.y.toFixed(2)} ${p2.x.toFixed(2)},${p2.y.toFixed(2)}`;
+  }
+  return d+'Z';
+}
+function segPath(mid){
+  return roundedPoly([polar(R_IN,mid-HALF),polar(R_OUT,mid-HALF),
+                      polar(R_OUT,mid+HALF),polar(R_IN,mid+HALF)],7);
+}
+
+function drawWheel(){
+  const svg=document.getElementById('live-svg');
+  const done=answered()===QS.length;
+  const pct=indexScore(), b=band(pct);
+
+  let h=`<rect width="680" height="680" fill="#fdfdfb"/>`;
+
+  QS.forEach((q,i)=>{
+    const mid=i*30;
+    const lvl=ANS[i]?ANS[i].lvl:0;
+    h+=`<path d="${segPath(mid)}" fill="${SHADE[lvl]}" stroke="#ffffff" stroke-width="3"/>`;
+    const p=polar((R_IN+R_OUT)/2,mid);
+    h+=`<text x="${p.x.toFixed(1)}" y="${(p.y+6).toFixed(1)}" text-anchor="middle"
+        font-family="Inter,sans-serif" font-size="17" font-weight="700"
+        fill="${lvl===1?'#12356b':(lvl===0?'#b6bcc6':'#ffffff')}">${q.n}</text>`;
+  });
+
+  /* centre */
+  h+=`<circle cx="${CX}" cy="${CY}" r="${R_IN-8}" fill="#ffffff" stroke="#12356b" stroke-width="3"/>`;
+  h+=`<text x="${CX}" y="${CY-30}" text-anchor="middle" font-family="Inter,sans-serif"
+      font-size="15" font-weight="700" letter-spacing="2.4" fill="#5a6b85">SPPI SCORE</text>`;
+  const txt=done?fmtScore(pct):'– –';
+  const fs=done?Math.min(64,(2*(R_IN-8)-58)/(txt.length*0.60)):40;
+  h+=`<text x="${CX}" y="${(CY+fs*0.36).toFixed(1)}" text-anchor="middle" font-family="Inter,sans-serif"
+      font-size="${fs.toFixed(1)}" font-weight="800" letter-spacing="-1"
+      fill="${done?b.col:'#dcdfe5'}">${txt}</text>`;
+  h+=`<text x="${CX}" y="${CY+fs*0.36+22}" text-anchor="middle" font-family="Inter,sans-serif"
+      font-size="11" font-weight="500" letter-spacing="1" fill="#8a8fa0">out of 100</text>`;
+  if(done){
+    h+=`<text x="${CX}" y="${CY+fs*0.36+46}" text-anchor="middle" font-family="Inter,sans-serif"
+        font-size="10.5" font-weight="700" letter-spacing="1.4" fill="${b.col}">${b.lbl}</text>`;
+  }
+
+  svg.innerHTML=h;
+
+  /* per-section running totals */
+  let sec=null,first=0,sum=0,max=0;
+  QS.forEach((q,i)=>{
+    if(q.sec!==sec){
+      if(sec!==null){const e=document.getElementById('sec-'+first);if(e)e.textContent=sum+' / '+max;}
+      sec=q.sec;first=i;sum=0;max=0;
+    }
+    max+=3; if(ANS[i])sum+=ANS[i].lvl;
+    if(i===QS.length-1){const e=document.getElementById('sec-'+first);if(e)e.textContent=sum+' / '+max;}
+  });
+}
+function drawAll(){drawWheel();}
+
+/* ═══════════════════════════════ SAVE / COPY ═════════════════════════ */
+function saveSeal(){
+  const svg=document.getElementById('live-svg');
+  const canvas=document.getElementById('dl-canvas');
+  const SCALE=5, W=680*SCALE, H=680*SCALE;
+  canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#fdfdfb';ctx.fillRect(0,0,W,H);
+  const blob=new Blob([new XMLSerializer().serializeToString(svg.cloneNode(true))],{type:'image/svg+xml'});
+  const url=URL.createObjectURL(blob);
+  const img=new Image();
+  img.onload=function(){
+    ctx.drawImage(img,0,0,W,H);
+    URL.revokeObjectURL(url);
+    canvas.toBlob(png=>{
+      const a=document.createElement('a');
+      a.download='SPPI_result.png';
+      a.href=URL.createObjectURL(png);
+      a.click();
+      URL.revokeObjectURL(a.href);
+      if(navigator.clipboard&&window.ClipboardItem){
+        navigator.clipboard.write([new ClipboardItem({'image/png':png})]).catch(()=>{});
+      }
+      const hint=document.getElementById('seal-hint');
+      hint.textContent='Saved (and copied, if supported) \u2713';
+      hint.classList.add('flash');
+      setTimeout(()=>{hint.textContent='Click the diagram to save or copy it';hint.classList.remove('flash');},2200);
+    },'image/png');
+  };
+  img.src=url;
+}
+
+drawAll();
+</script>
+</body>
+</html>
