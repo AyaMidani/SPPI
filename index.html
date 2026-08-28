@@ -17,7 +17,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);min-he
 
 .hero{background:var(--white);text-align:center;padding:2.4rem 1.5rem 1.8rem;border-bottom:1px solid var(--border)}
 .hero h2{font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.8rem,4vw,2.6rem);color:var(--navy)}
-.hero p{margin-top:.35rem;font-size:.9rem;letter-spacing:.02em;color:var(--muted)}
+.hero p{margin-top:.35rem;font-size:.95rem;font-weight:700;letter-spacing:.02em;color:var(--navy)}
 
 .main-col,.sidebar{min-width:0}
 .app{display:grid;grid-template-columns:1fr 660px;gap:1.5rem;max-width:1600px;margin:0 auto;padding:1.5rem;align-items:start}
@@ -37,7 +37,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);min-he
 .qlabel{flex:1 1 0%;min-width:0;padding:.7rem .95rem;display:flex;flex-direction:column;justify-content:center;
   font-size:.81rem;line-height:1.4}
 .qlabel b{font-weight:700;color:var(--navy)}
-.qanswer{flex:0 0 300px;max-width:300px;min-width:0;padding:.5rem .8rem;display:flex;align-items:center;
+.qanswer{flex:0 0 420px;max-width:420px;min-width:0;padding:.5rem .8rem;display:flex;align-items:center;
   border-left:1px solid var(--border);background:#fafbfc}
 
 .qfoot{padding:.85rem 1.1rem;font-size:.9rem;font-weight:700;color:white;background:var(--navy)}
@@ -361,7 +361,7 @@ function renderAll(){
       if(open)html+='</div>';
       sec=q.sec; open=true;
       html+='<div class="qtable">';
-      html+=`<div class="qghead"><span>${sec}</span><span class="cmax" id="sec-${i}"></span></div>`;
+      html+=`<div class="qghead"><span>${sec}</span></div>`;
     }
     html+=`
       <div class="qrow">
@@ -380,7 +380,10 @@ function renderAll(){
       </div>`;
   });
   if(open)html+='</div>';
-  html+='<div class="qtable"><div class="qfoot">This application is for research purposes.</div></div>';
+  html+='<div class="qtable">'+
+        '<div class="qfoot" style="border-bottom:1px solid #14293f">This application is for research purposes.</div>'+
+        '<div class="qfoot">For any inquiries, please consult Prof. Heba Shaaban. '+
+        '<a href="mailto:Hsmohammed@iau.edu.sa" style="color:#fff">Hsmohammed@iau.edu.sa</a></div></div>';
   document.getElementById('tables').innerHTML=html;
 }
 renderAll();
@@ -419,7 +422,7 @@ function pick(i,oi){
    each shaded by the level scored and carrying its number.
 ════════════════════════════════════════════════════════════════════════ */
 const CX=340, CY=340;
-const R_IN=168, R_OUT=304, HALF=13.6;
+const R_IN=126, R_OUT=304, HALF=13.6;
 
 function polar(r,deg){const a=(deg-90)*Math.PI/180;return{x:CX+r*Math.cos(a),y:CY+r*Math.sin(a)};}
 function roundedPoly(pts,rad){
@@ -460,32 +463,16 @@ function drawWheel(){
 
   /* centre */
   h+=`<circle cx="${CX}" cy="${CY}" r="${R_IN-8}" fill="#ffffff" stroke="#12356b" stroke-width="3"/>`;
-  h+=`<text x="${CX}" y="${CY-30}" text-anchor="middle" font-family="Inter,sans-serif"
-      font-size="15" font-weight="700" letter-spacing="2.4" fill="#5a6b85">SPPI SCORE</text>`;
+  h+=`<text x="${CX}" y="${CY-26}" text-anchor="middle" font-family="Inter,sans-serif"
+      font-size="21" font-weight="700" letter-spacing="2.6" fill="#5a6b85">SPPI SCORE</text>`;
   const txt=done?fmtScore(pct):'– –';
-  const fs=done?Math.min(64,(2*(R_IN-8)-58)/(txt.length*0.60)):40;
-  h+=`<text x="${CX}" y="${(CY+fs*0.36).toFixed(1)}" text-anchor="middle" font-family="Inter,sans-serif"
+  const fs=done?Math.min(72,(2*(R_IN-8)-40)/(txt.length*0.60)):44;
+  h+=`<text x="${CX}" y="${(CY+fs*0.46).toFixed(1)}" text-anchor="middle" font-family="Inter,sans-serif"
       font-size="${fs.toFixed(1)}" font-weight="800" letter-spacing="-1"
       fill="${done?b.col:'#dcdfe5'}">${txt}</text>`;
-  h+=`<text x="${CX}" y="${CY+fs*0.36+22}" text-anchor="middle" font-family="Inter,sans-serif"
-      font-size="11" font-weight="500" letter-spacing="1" fill="#8a8fa0">out of 100</text>`;
-  if(done){
-    h+=`<text x="${CX}" y="${CY+fs*0.36+46}" text-anchor="middle" font-family="Inter,sans-serif"
-        font-size="10.5" font-weight="700" letter-spacing="1.4" fill="${b.col}">${b.lbl}</text>`;
-  }
 
   svg.innerHTML=h;
 
-  /* per-section running totals */
-  let sec=null,first=0,sum=0,max=0;
-  QS.forEach((q,i)=>{
-    if(q.sec!==sec){
-      if(sec!==null){const e=document.getElementById('sec-'+first);if(e)e.textContent=sum+' / '+max;}
-      sec=q.sec;first=i;sum=0;max=0;
-    }
-    max+=3; if(ANS[i])sum+=ANS[i].lvl;
-    if(i===QS.length-1){const e=document.getElementById('sec-'+first);if(e)e.textContent=sum+' / '+max;}
-  });
 }
 function drawAll(){drawWheel();}
 
