@@ -340,8 +340,8 @@ const BANDS=[
 ];
 const band=p=>BANDS.find(b=>p>=b.min);
 
-/* Segment shading follows the level scored: low=white, acceptable=light blue, high=medium blue. */
-const SHADE={3:'#3b74d4', 2:'#a8c8ef', 1:'#ffffff', 0:'#eceef2'};
+/* Segment shading follows the level scored, on the document's blue scale. */
+const SHADE={3:'#12356b', 2:'#3b74d4', 1:'#a8c8ef', 0:'#eceef2'};
 
 /* ═══════════════════════════════ STATE ═══════════════════════════════ */
 const ANS={};
@@ -446,18 +446,18 @@ function segPath(mid){
 function drawWheel(){
   const svg=document.getElementById('live-svg');
   const done=answered()===QS.length;
-  const pct=indexScore();
+  const pct=indexScore(), b=band(pct);
 
   let h=`<rect width="680" height="680" fill="#fdfdfb"/>`;
 
   QS.forEach((q,i)=>{
     const mid=i*30;
     const lvl=ANS[i]?ANS[i].lvl:0;
-    h+=`<path d="${segPath(mid)}" fill="${SHADE[lvl]}" stroke="#b9c6db" stroke-width="2"/>`;
+    h+=`<path d="${segPath(mid)}" fill="${SHADE[lvl]}" stroke="#ffffff" stroke-width="3"/>`;
     const p=polar((R_IN+R_OUT)/2,mid);
     h+=`<text x="${p.x.toFixed(1)}" y="${(p.y+6).toFixed(1)}" text-anchor="middle"
         font-family="Inter,sans-serif" font-size="17" font-weight="700"
-        fill="${lvl===3?'#ffffff':(lvl===0?'#b6bcc6':'#12356b')}">${q.n}</text>`;
+        fill="${lvl===1?'#12356b':(lvl===0?'#b6bcc6':'#ffffff')}">${q.n}</text>`;
   });
 
   /* centre */
@@ -468,7 +468,7 @@ function drawWheel(){
   const fs=done?Math.min(72,(2*(R_IN-8)-40)/(txt.length*0.60)):44;
   h+=`<text x="${CX}" y="${(CY+fs*0.52).toFixed(1)}" text-anchor="middle" font-family="Inter,sans-serif"
       font-size="${fs.toFixed(1)}" font-weight="800" letter-spacing="-1"
-      fill="${done?'#12356b':'#dcdfe5'}">${txt}</text>`;
+      fill="${done?b.col:'#dcdfe5'}">${txt}</text>`;
 
   svg.innerHTML=h;
 
